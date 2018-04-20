@@ -11,7 +11,10 @@ services:
     image: mongo:latest
     container_name: mongo
     ports:
-      - 27012:27017
+      - 27017:27017
+    command: mongod
+    logging:
+      driver: none
 
   app:
     build:
@@ -20,4 +23,7 @@ services:
     container_name: test-stand
     volumes:
       - '.:/var/app'
+    depends_on:
+      - clickhouse
+      - mongo
 
