@@ -1,0 +1,22 @@
+{
+    "name": "anikin-elets/test-stand-mongodb-clickhouse",
+    "description": "Test bench for performance comparison aggregation requests in MongoDB and ClickHouse",
+    "require": {
+        "php": "~7.2",
+        "mongodb/mongodb": "^1.3",
+        "symfony/yaml": "~4.0",
+        "smi2/phpclickhouse": "^0.17"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anikin Evgenij",
+            "email": "anikin-elets@yandex.ru"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Otus\\TestStand\\": "src"
+        }
+    }
+}
