@@ -1,0 +1,13 @@
+mongo:
+  host: "mongo"
+  port: 27017
+  dbname: "teststand"
+  collection: "teststand"
+
+clickhouse:
+  host: "clickhouse"
+  port: 8123
+  username: "default"
+  password: ""
+  dbname: "teststand"
+  tablename: "teststand"
