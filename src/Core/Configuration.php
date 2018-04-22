@@ -3,6 +3,7 @@
 namespace Otus\TestStand\Core;
 
 use Otus\TestStand\Exceptions\EmptyContentException;
+use Otus\TestStand\Interfaces\ConfigurationInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class Configuration implements ConfigurationInterface
@@ -104,12 +105,12 @@ class Configuration implements ConfigurationInterface
     protected function getAllSettings()
     {
         if (!file_exists($this->path))
-            throw new EmptyContentException("File not found");
+            throw new EmptyContentException("Configuration file not found");
 
         $content = Yaml::parseFile($this->path);
 
         if (empty($content))
-            throw new EmptyContentException("Config file is empty");
+            throw new EmptyContentException("Configuration file is empty");
 
         return $content;
     }

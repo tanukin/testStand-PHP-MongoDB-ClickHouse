@@ -1,6 +1,6 @@
 <?php
 
-namespace Otus\TestStand\Core;
+namespace Otus\TestStand\Interfaces;
 
 use Otus\TestStand\Exceptions\EmptyContentException;
 

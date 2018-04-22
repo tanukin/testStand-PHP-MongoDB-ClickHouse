@@ -36,6 +36,10 @@ class ClickHouseRepository implements RepositoryInterface
      * @var Client
      */
     private $db;
+    /**
+     * @var string
+     */
+    private $tablename;
 
     /**
      * ClickHouseRepository constructor.
@@ -43,6 +47,7 @@ class ClickHouseRepository implements RepositoryInterface
      * @param string $host
      * @param int $port
      * @param string $dbname
+     * @param string $tablename
      * @param string $username
      * @param string $password
      */
@@ -50,6 +55,7 @@ class ClickHouseRepository implements RepositoryInterface
         string $host,
         int $port,
         string $dbname = 'teststand',
+        string $tablename = 'teststand',
         string $username = 'default',
         string $password = ''
     )
@@ -59,6 +65,7 @@ class ClickHouseRepository implements RepositoryInterface
         $this->dbname = $dbname;
         $this->username = $username;
         $this->password = $password;
+        $this->tablename = $tablename;
     }
 
     /**
@@ -81,38 +88,35 @@ class ClickHouseRepository implements RepositoryInterface
         return $this;
     }
 
-    public function write(array $data): float
+    /**
+     * @param array $header
+     * @param $data
+     *
+     * @return float
+     */
+    public function write(array $header, $data): float
     {
-        $start = microtime();
+        $start = microtime(true);
 
-        $this->db->insert('summing_url_views',
-            [
-                [time(), 'HASH1', 2345, 22, 20, 2],
-                [time(), 'HASH2', 2345, 12, 9, 3],
-                [time(), 'HASH3', 5345, 33, 33, 0],
-                [time(), 'HASH3', 5345, 55, 0, 55],
-            ],
-            ['event_time', 'site_key', 'site_id', 'views', 'v_00', 'v_55']
+        $this->db->insert($this->tablename,
+            $data,
+            $header
         );
 
-        $end = microtime() - $start;
+        $end = microtime(true) - $start;
 
         return $end;
     }
 
+    /**
+     * @return float
+     */
     public function read(): float
     {
-        $start = microtime();
+        $start = microtime(true);
 
-        $statement = $this->db->select('
-                            SELECT event_date, site_key, sum(views), avg(views)
-                            FROM summing_url_views
-                            WHERE site_id < 3333
-                            GROUP BY event_date, url_hash
-                            WITH TOTALS
-                        ');
 
-        $end = microtime() - $start;
+        $end = microtime(true) - $start;
 
         return $end;
     }
@@ -125,17 +129,26 @@ class ClickHouseRepository implements RepositoryInterface
 
     private function createTable(): void
     {
-        $this->db->write('
-    CREATE TABLE IF NOT EXISTS summing_url_views (
-        event_date Date DEFAULT toDate(event_time),
-        event_time DateTime,
-        site_id Int32,
-        site_key String,
-        views Int32,
-        v_00 Int32,
-        v_55 Int32
-    )
-    ENGINE = SummingMergeTree(event_date, (site_id, site_key, event_time, event_date), 8192)
-');
+        $this->db->write("
+                    CREATE TABLE IF NOT EXISTS $this->tablename (                  
+                        Year Int32,
+                        Quarter Int32,
+                        Month Int32,
+                        DayofMonth Int32,
+                        DayOfWeek Int32,
+                        FlightDate Date,
+                        AirlineID Int32,
+                        TailNum String,
+                        FlightNum Int32,
+                        OriginAirportID Int32,
+                        OriginAirportSeqID Int32,
+                        OriginCityMarketID Int32,
+                        OriginCityName String,
+                        OriginStateName String,
+                        DestAirportID Int32,
+                        DestAirportSeqID Int32,
+                        DestCityMarketID Int32                       
+                    ) ENGINE = MergeTree(FlightDate, (TailNum, FlightDate),8129)         
+                          ");
     }
 }

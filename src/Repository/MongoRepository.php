@@ -23,6 +23,11 @@ class MongoRepository implements RepositoryInterface
     private $dbname;
 
     /**
+     * @var string
+     */
+    private $collection;
+
+    /**
      * @var Client
      */
     private $db;
@@ -32,13 +37,20 @@ class MongoRepository implements RepositoryInterface
      *
      * @param string $host
      * @param int $port
-     * @param string $dbName
+     * @param string $dbname
+     * @param string $collection
      */
-    public function __construct(string $host, int $port, string $dbname = 'teststand')
+    public function __construct(
+        string $host,
+        int $port,
+        string $dbname = 'teststand',
+        string $collection = 'teststand'
+    )
     {
         $this->host = $host;
         $this->port = $port;
         $this->dbname = $dbname;
+        $this->collection = $collection;
     }
 
     /**
@@ -46,99 +58,51 @@ class MongoRepository implements RepositoryInterface
      */
     public function getConnect(): RepositoryInterface
     {
-        if(!isset($this->db))
-            $this->db = new Client(sprintf("mongodb://%s:%d", $this->host, $this->port));
+        if (!isset($this->db))
+            $this->db = new Client(sprintf('mongodb://%s:%d', $this->host, $this->port));
 
         return $this;
     }
 
-    public function write(array $data): float
+    /**
+     * @param array $header
+     * @param $data
+     *
+     * @return float
+     */
+    public function write(array $header, $data): float
     {
-        $db = $this->db->selectDatabase($this->dbname);
+        $db = $this->db->selectDatabase($this->dbname)->selectCollection($this->collection);
 
-        $start = microtime();
-        $db->new->insertMany([
-        [
-            'item' => 'canvas',
-            'qty' => 100,
-            'size' => ['h' => 28, 'w' => 35.5, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-        [
-            'item' => 'journal',
-            'qty' => 25,
-            'size' => ['h' => 14, 'w' => 21, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-        [
-            'item' => 'mat',
-            'qty' => 85,
-            'size' => ['h' => 27.9, 'w' => 35.5, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-        [
-            'item' => 'mousepad',
-            'qty' => 25,
-            'size' => ['h' => 19, 'w' => 22.85, 'uom' => 'cm'],
-            'status' => 'P',
-        ],
-        [
-            'item' => 'notebook',
-            'qty' => 50,
-            'size' => ['h' => 8.5, 'w' => 11, 'uom' => 'in'],
-            'status' => 'P',
-        ],
-        [
-            'item' => 'paper',
-            'qty' => 100,
-            'size' => ['h' => 8.5, 'w' => 11, 'uom' => 'in'],
-            'status' => 'D',
-        ],
-        [
-            'item' => 'planner',
-            'qty' => 75,
-            'size' => ['h' => 22.85, 'w' => 30, 'uom' => 'cm'],
-            'status' => 'D',
-        ],
-        [
-            'item' => 'postcard',
-            'qty' => 45,
-            'size' => ['h' => 10, 'w' => 15.25, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-        [
-            'item' => 'sketchbook',
-            'qty' => 80,
-            'size' => ['h' => 14, 'w' => 21, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-        [
-            'item' => 'sketch pad',
-            'qty' => 95,
-            'size' => ['h' => 22.85, 'w' => 30.5, 'uom' => 'cm'],
-            'status' => 'A',
-        ],
-    ]);
-        $end = microtime() - $start;
+        $arrInsert[] = array_map(function ($item) use ($header) {
+            return array_combine($header, $item);
+        }, $data);
+
+        $start = microtime(true);
+        $db->insertMany($arrInsert);
+        $end = microtime(true) - $start;
 
         return $end;
     }
 
+    /**
+     * @return float
+     */
     public function read(): float
     {
-        $db = $this->db->selectDatabase($this->dbname);
+        $db = $this->db->selectDatabase($this->dbname)->selectCollection($this->collection);
 
-        $start = microtime();
-        $db->new->aggregate(
+        $start = microtime(true);
+        /*$db->aggregate(
             [
                 ['$match' => ['status' => 'A']],
                 ['$group' => [
                     '_id' => 'qty',
                     'total' => ['$sum' => '$qty']]]
             ]
-        );
+        );*/
 
-        $end = microtime() - $start;
+        $end = microtime(true) - $start;
 
         return $end;
     }
