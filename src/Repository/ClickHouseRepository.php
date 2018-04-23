@@ -97,28 +97,41 @@ class ClickHouseRepository implements RepositoryInterface
     public function write(array $header, $data): float
     {
         $start = microtime(true);
-
         $this->db->insert($this->tablename,
             $data,
             $header
         );
-
         $end = microtime(true) - $start;
 
         return $end;
     }
 
     /**
-     * @return float
+     * @return array
      */
-    public function read(): float
+    public function read(): array
     {
+        $totalResults = [];
+
+        // 1 запрос
         $start = microtime(true);
-
-
+        $this->db->select("select DayofWeek, avg(DestAirportID) from $this->tablename group by DayofWeek");
         $end = microtime(true) - $start;
+        $totalResults[] = $end;
 
-        return $end;
+        // 2 запрос
+        $start = microtime(true);
+        $this->db->select("select OriginStateName count(DayofWeek) from $this->tablename OriginStateName = 'California' group by OriginStateName");
+        $end = microtime(true) - $start;
+        $totalResults[] = $end;
+
+        // 3 запрос
+        $start = microtime(true);
+        $this->db->select("select FlightDate sum(DestAirportID) from $this->tablename AirlineID <= 19805 and AirlineID > 5344 group by FlightDate");
+        $end = microtime(true) - $start;
+        $totalResults[] = $end;
+
+        return $totalResults;
     }
 
     private function createDatabase(): void

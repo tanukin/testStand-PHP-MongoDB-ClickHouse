@@ -86,24 +86,53 @@ class MongoRepository implements RepositoryInterface
     }
 
     /**
-     * @return float
+     * @return array
      */
-    public function read(): float
+    public function read(): array
     {
         $db = $this->db->selectDatabase($this->dbname)->selectCollection($this->collection);
+        $totalResults = [];
 
+        // 1 запрос
         $start = microtime(true);
-        /*$db->aggregate(
+        $db->aggregate(
             [
-                ['$match' => ['status' => 'A']],
                 ['$group' => [
-                    '_id' => 'qty',
-                    'total' => ['$sum' => '$qty']]]
+                    '_id' => '$DayofWeek',
+                    'avg' => ['$avg' => '$DestAirportID']]]
             ]
-        );*/
-
+        );
         $end = microtime(true) - $start;
+        $totalResults[] = $end;
 
-        return $end;
+        // 2 запрос
+        $start = microtime(true);
+        $db->aggregate(
+            [
+                ['$match' => ['OriginStateName' => 'California']],
+                ['$group' => [
+                    '_id' => '$OriginStateName',
+                    'count' => ['$sum' => 1]
+                ]]
+            ]
+        );
+        $end = microtime(true) - $start;
+        $totalResults[] = $end;
+
+        // 3 запрос
+        $start = microtime(true);
+        $db->aggregate(
+            [
+                ['$match' => ['AirlineID' => ['$lte' => '19805', '$gt' => '5344']]],
+                ['$group' => [
+                    '_id' => '$FlightDate',
+                    'sum'=> ['$sum' => '$DestAirportID']
+                ]]
+            ]
+        );
+        $end = microtime(true) - $start;
+        $totalResults[] = $end;
+
+        return $totalResults;
     }
 }
